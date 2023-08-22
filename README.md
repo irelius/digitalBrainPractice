@@ -1,2 +1,2 @@
 # digitalBrainPractice
-Digital Brain First Objective:
+Digital Brain First Objective
