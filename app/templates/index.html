@@ -38,17 +38,30 @@
             align-items: center;
         }
 
-
-        #new-task-textarea {
+        .new-task-textarea {
             background-color: #16131A;
             color: #616161;
             border-radius: 10px;
             border: 1px solid #08070a;
             box-shadow: 0 0 5px rgb(103, 101, 104);
+            width: 400px;
+            height: auto;
+
+            resize: none;
+            text-align: center;
+            overflow: auto;
+
+            padding-left: 5px;
+            padding-right: 5px;
         }
 
-        #api-key_hidden {
-            display: none;
+        .new-task-textarea::placeholder {
+            text-align: center;
+            justify-content: center;
+
+            height: 30px;
+            position: absolute;
+            top: 50%;
         }
 
         .btn {
@@ -58,12 +71,51 @@
             padding: 10px 30px;
             border-radius: 20px;
             font-size: 15px;
+
+            margin-top: 20px;
         }
 
         .btn:hover {
             background-color: #3f3749;
             box-shadow: 0 0 3px rgb(122, 122, 122);
             color: #ac8be4;
+            cursor: pointer;
+        }
+
+        .task-container {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+
+            margin-bottom: 20px;
+        }
+
+        .task-container>* {
+            width: 300px;
+            overflow-wrap: break-word;
+        }
+
+        .delete-btn {
+            display: flex;
+            justify-content: center;
+
+            color: #e0e0e0;
+            background-color: #4e2694;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 15px;
+
+            width: 100px;
+            margin-right: 15px;
+        }
+
+        .delete-btn:hover {
+            background-color: #3f3749;
+            box-shadow: 0 0 3px rgb(122, 122, 122);
+            color: #ac8be4;
+            cursor: pointer;
         }
 
 
@@ -106,53 +158,83 @@
 
     <div class="container center">
         <div id="task-list">
-            <section>list goes here</section>
+            <section>Empty List</section>
         </div>
         <div>
-            <button class="btn" id="add-task-btn">
-                Add New Task
-            </button>
-        </div>
-        <div id="new-task-container">
-            <textarea id="new-task-textarea"></textarea>
-            <button class="btn" id="create-task-btn">Create New Task</button>
+            <textarea class="new-task-textarea" placeholder="Add a New Task" id="new-task-input"></textarea>
         </div>
     </div>
 </body>
 
 <script>
+    function saveTasksToLocalStorage(tasks) {
+        window.localStorage.setItem("tasks", JSON.stringify(tasks));
+    }
+
+    function listTasks(task, i) {
+        const divElement = document.createElement("div");
+        divElement.classList.add("task-container")
+
+        const completeButton = document.createElement("button");
+        completeButton.textContent = "Complete";
+        completeButton.classList.add("delete-btn")
+        completeButton.addEventListener("click", () => deleteTask(i));
+        divElement.appendChild(completeButton);
+
+        const taskText = document.createElement("span")
+        taskText.textContent = task;
+        taskText.classList.add("task-text");
+        divElement.appendChild(taskText);
+
+        return divElement;
+    }
+
+
+    function deleteTask(index) {
+        const localStorageTasks = JSON.parse(window.localStorage.getItem("tasks"));
+        if (localStorageTasks && Array.isArray(localStorageTasks)) {
+            localStorageTasks.splice(index, 1);
+            saveTasksToLocalStorage(localStorageTasks);
+            loadStorageTasks();
+        }
+    }
+
     function loadStorageTasks() {
-        const localStorageTasks = JSON.parse(window.localStorage.getItem("tasks"))
-        const taskList = document.getElementById("task-list")
+        const localStorageTasks = JSON.parse(window.localStorage.getItem("tasks"));
+        const taskList = document.getElementById("task-list");
 
         if (localStorageTasks && Array.isArray(localStorageTasks)) {
             taskList.innerHTML = ""; // Clear existing content
 
-            localStorageTasks.forEach(task => {
-                // change this to be more accurate to the check list type
-                const li = document.createElement("li");
-                li.textContent = task;
-                taskList.appendChild(li);
-            });
+            for (let i = 0; i < localStorageTasks.length; i++) {
+                const task = localStorageTasks[i];
+                const taskElement = listTasks(task, i);
+                taskElement.classList.add("task")
+                taskList.appendChild(taskElement);
+            }
+        } else {
+            const noTasks = document.createElement("div")
+            noTasks.textContent = "No Tasks";
+            taskList.appendChild(noTasks);
         }
     }
     window.addEventListener("load", loadStorageTasks)
 
-    const newTaskInput = document.getElementById("new-task-textarea")
-    const addTaskButton = document.getElementById("add-task-btn")
 
-    addTaskButton.addEventListener("click", () => {
-
-    })
-
-    const createTaskButton = document.getElementById('create-task-btn')
-    createTaskButton.addEventListener("click", () => {
-        const newTask = newTaskInput.value;
-        if(newTask) {
-            console.log('asdf', newTask)
+    const newTaskInput = document.getElementById("new-task-input")
+    newTaskInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            const newTask = newTaskInput.value.trim(); // Remove leading/trailing whitespace
+            if (newTask) {
+                const localStorageTasks = JSON.parse(window.localStorage.getItem("tasks")) || [];
+                localStorageTasks.push(newTask);
+                saveTasksToLocalStorage(localStorageTasks);
+                loadStorageTasks();
+                newTaskInput.value = "";
+            }
         }
-        newTaskInput.value = ""
-    })
+    });
 </script>
 
 </html>
