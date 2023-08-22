@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Brain Practice</title>
+    <style>
+        body {
+            font-family: "Poppins", sans-serif;
+            background-color: #16131A;
+            color: #a6a8ac;
+        }
+
+        .container {
+            background-color: #0A090D;
+            margin: 0 auto;
+            padding: 10px 30px;
+            border: 2px solid #08070a;
+            border-radius: 17px;
+            max-width: 1400px;
+        }
+
+        .main {
+
+            text-align: center;
+            margin-top: 10px;
+            margin-bottom: 20px;
+            color: #929292;
+            font-family: monospace;
+            font-size: 50px;
+
+        }
+
+        .center>* {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+
+        #new-task-textarea {
+            background-color: #16131A;
+            color: #616161;
+            border-radius: 10px;
+            border: 1px solid #08070a;
+            box-shadow: 0 0 5px rgb(103, 101, 104);
+        }
+
+        #api-key_hidden {
+            display: none;
+        }
+
+        .btn {
+            color: #e0e0e0;
+            background-color: #4e2694;
+            border: none;
+            padding: 10px 30px;
+            border-radius: 20px;
+            font-size: 15px;
+        }
+
+        .btn:hover {
+            background-color: #3f3749;
+            box-shadow: 0 0 3px rgb(122, 122, 122);
+            color: #ac8be4;
+        }
+
+
+        a {
+            color: #9b8aaf;
+        }
+
+        a:hover {
+            color: aliceblue;
+            text-decoration: none;
+        }
+
+        @media only screen and (max-width: 767px) {
+            .main {
+                font-size: 30px;
+            }
+
+            .file-upload {
+                margin-top: 5px;
+            }
+
+            .api-key {
+                margin-top: 20px;
+            }
+
+            .question {
+                margin-top: 20px;
+            }
+
+            .answer {
+                margin-top: 5px;
+                margin-bottom: 5px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1 class="main">Task Tracker</h1>
+
+    <div class="container center">
+        <div id="task-list">
+            <section>list goes here</section>
+        </div>
+        <div>
+            <button class="btn" id="add-task-btn">
+                Add New Task
+            </button>
+        </div>
+        <div id="new-task-container">
+            <textarea id="new-task-textarea"></textarea>
+            <button class="btn" id="create-task-btn">Create New Task</button>
+        </div>
+    </div>
+</body>
+
+<script>
+    function loadStorageTasks() {
+        const localStorageTasks = JSON.parse(window.localStorage.getItem("tasks"))
+        const taskList = document.getElementById("task-list")
+
+        if (localStorageTasks && Array.isArray(localStorageTasks)) {
+            taskList.innerHTML = ""; // Clear existing content
+
+            localStorageTasks.forEach(task => {
+                // change this to be more accurate to the check list type
+                const li = document.createElement("li");
+                li.textContent = task;
+                taskList.appendChild(li);
+            });
+        }
+    }
+    window.addEventListener("load", loadStorageTasks)
+
+    const newTaskInput = document.getElementById("new-task-textarea")
+    const addTaskButton = document.getElementById("add-task-btn")
+
+    addTaskButton.addEventListener("click", () => {
+
+    })
+
+    const createTaskButton = document.getElementById('create-task-btn')
+    createTaskButton.addEventListener("click", () => {
+        const newTask = newTaskInput.value;
+        if(newTask) {
+            console.log('asdf', newTask)
+        }
+        newTaskInput.value = ""
+    })
+</script>
+
+</html>
