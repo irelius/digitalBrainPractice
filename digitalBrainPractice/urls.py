@@ -22,4 +22,6 @@ urlpatterns = [
     path('', views.main, name="main"),
     path('profile/', views.profile, name="profile"),
     path('admin/', admin.site.urls),
+    path('api/tasks', views.api_test, name="api-test"),
+    path('api/tasks/create', views.api_store_tasks, name="api-store-tasks")
 ]
