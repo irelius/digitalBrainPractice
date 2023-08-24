@@ -45,7 +45,8 @@
             border: 1px solid #08070a;
             box-shadow: 0 0 5px rgb(103, 101, 104);
             width: 400px;
-            height: auto;
+            height: 30px;
+            line-height: 30px;
 
             resize: none;
             text-align: center;
@@ -118,6 +119,9 @@
             cursor: pointer;
         }
 
+        .no-tasks {
+            margin-bottom: 15px;
+        }
 
         a {
             color: #9b8aaf;
@@ -158,27 +162,85 @@
 
     <div class="container center">
         <div id="task-list">
-            <section>Empty List</section>
         </div>
         <div>
-            <textarea class="new-task-textarea" placeholder="Add a New Task" id="new-task-input"></textarea>
+            <textarea class="new-task-textarea" maxLength="50" placeholder="Add a New Task"
+                id="new-task-input"></textarea>
         </div>
     </div>
 </body>
 
 <script>
-    function saveTasksToLocalStorage(tasks) {
-        window.localStorage.setItem("tasks", JSON.stringify(tasks));
+    let tasksArrKeeper = []
+
+    // function to handle deleting a task after 'completing' it
+    function deleteTask(tasksArr, index) {
+        console.log('test', index)
+
+        fetch(`/api/tasks/delete/${index}/`, {
+            method: "DELETE",
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+            .then(response => {
+                if (response.ok) {
+                    loadTasks();
+                } else {
+                    console.error("Error deleting a task: ", res.statusText)
+                }
+            })
+            .catch(error => {
+                console.error('API Request Error: ', error)
+            })
     }
 
-    function listTasks(task, i) {
+    // function to send current list of tasks to backend
+    function createNewTask(taskText) {
+        const newTask = { "task": taskText }
+        fetch('/api/tasks/create/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(newTask),
+        })
+            .then(response => {
+                if (response.ok) {
+                    loadTasks(); // Fetch updated task list
+                } else {
+                    console.error('Error creating a new task:', response.statusText);
+                }
+            })
+            .catch(error => {
+                console.error('API Request Error:', error);
+            });
+
+    }
+
+    // handle event listener when user enters new task
+    const newTaskInput = document.getElementById("new-task-input")
+    newTaskInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            const newTask = newTaskInput.value.trim(); // Remove leading/trailing whitespace
+            if (newTask) {
+                createNewTask(newTask)
+            }
+            newTaskInput.value = ""
+
+        }
+    });
+
+    // function to create a new task element to add to the div
+    function listTasks(task, index, tasksArr) {
         const divElement = document.createElement("div");
         divElement.classList.add("task-container")
 
         const completeButton = document.createElement("button");
         completeButton.textContent = "Complete";
         completeButton.classList.add("delete-btn")
-        completeButton.addEventListener("click", () => deleteTask(i));
+        completeButton.addEventListener("click", () => deleteTask(tasksArr, index));
         divElement.appendChild(completeButton);
 
         const taskText = document.createElement("span")
@@ -190,51 +252,54 @@
     }
 
 
-    function deleteTask(index) {
-        const localStorageTasks = JSON.parse(window.localStorage.getItem("tasks"));
-        if (localStorageTasks && Array.isArray(localStorageTasks)) {
-            localStorageTasks.splice(index, 1);
-            saveTasksToLocalStorage(localStorageTasks);
-            loadStorageTasks();
+    // function to fetch the tasks from backend
+    async function fetchTasks() {
+        try {
+            const response = await fetch("/api/tasks/get");
+            const data = await response.json();
+            if (data.tasks) {
+                return data.tasks;
+            }
+        } catch (error) {
+            console.error("API Request Error: ", error);
         }
+        return [];
     }
 
-    function loadStorageTasks() {
-        const localStorageTasks = JSON.parse(window.localStorage.getItem("tasks"));
+    // function to load tasks. Fetch from backend for any tasks that exist on the backend
+    async function loadTasks() {
         const taskList = document.getElementById("task-list");
+        try {
+            const tasksArr = await fetchTasks(); // Wait for the fetchTasks function to complete
+            tasksArrKeeper = [...tasksArr]
+            console.log('asdfasdf', tasksArrKeeper)
+            // console.log(tasksArr)
 
-        if (localStorageTasks && Array.isArray(localStorageTasks)) {
-            taskList.innerHTML = ""; // Clear existing content
+            if (tasksArr && Array.isArray(tasksArr)) {
+                taskList.innerHTML = ""; // Clear existing content
 
-            for (let i = 0; i < localStorageTasks.length; i++) {
-                const task = localStorageTasks[i];
-                const taskElement = listTasks(task, i);
-                taskElement.classList.add("task")
-                taskList.appendChild(taskElement);
+                for (let i = 0; i < tasksArr.length; i++) {
+                    const index = tasksArr[i].id;
+                    const task = tasksArr[i].task;
+                    const taskElement = listTasks(task, index, tasksArr);
+                    taskElement.classList.add('task');
+                    taskList.appendChild(taskElement);
+                }
             }
-        } else {
-            const noTasks = document.createElement("div")
-            noTasks.textContent = "No Tasks";
-            taskList.appendChild(noTasks);
+            if (tasksArr.length === 0) {
+                const noTasks = document.createElement("div")
+                noTasks.textContent = "You've got no more tasks left to do. Nice!";
+                noTasks.classList.add("no-tasks")
+                taskList.appendChild(noTasks);
+
+            }
+        } catch (error) {
+            console.error("Error loading tasks: ", error);
         }
     }
-    window.addEventListener("load", loadStorageTasks)
 
-
-    const newTaskInput = document.getElementById("new-task-input")
-    newTaskInput.addEventListener("keydown", (event) => {
-        if (event.key === "Enter") {
-            event.preventDefault();
-            const newTask = newTaskInput.value.trim(); // Remove leading/trailing whitespace
-            if (newTask) {
-                const localStorageTasks = JSON.parse(window.localStorage.getItem("tasks")) || [];
-                localStorageTasks.push(newTask);
-                saveTasksToLocalStorage(localStorageTasks);
-                loadStorageTasks();
-                newTaskInput.value = "";
-            }
-        }
-    });
+    // on load, auto log in user and load tasks
+    window.addEventListener("load", loadTasks)
 </script>
 
 </html>
